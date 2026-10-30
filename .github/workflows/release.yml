@@ -1,0 +1,102 @@
+name: Release verified packages
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: read
+concurrency:
+  group: release-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  validate:
+    uses: ./.github/workflows/ci.yml
+  package:
+    needs: validate
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            rid: linux-x64
+            target: linux-x64
+          - os: windows-2022
+            rid: win-x64
+            target: windows-x64
+          - os: macos-15
+            rid: osx-arm64
+            target: macos-arm64
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
+        with:
+          dotnet-version: '10.0.x'
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
+        with:
+          python-version: '3.13'
+      - run: dotnet publish src/CrashMap.Cli -c Release -r ${{ matrix.rid }} --self-contained true -p:PackAsTool=false -o stage/bin --source https://api.nuget.org/v3/index.json
+      - name: Installed-layout oracle and native package
+        shell: bash
+        run: |
+          set -euo pipefail
+          bin=stage/bin/crashmap
+          if [[ "$RUNNER_OS" == "Windows" ]]; then bin=stage/bin/crashmap.exe; fi
+          python tests/integration.py "$bin" .
+          python tools/package.py stage '${{ matrix.target }}' --version "${GITHUB_REF_NAME#v}"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: package-${{ matrix.target }}
+          path: dist/crashmap-*
+          if-no-files-found: error
+  tool:
+    needs: validate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
+        with:
+          dotnet-version: '10.0.x'
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
+        with:
+          python-version: '3.13'
+      - name: Package and install from the local feed
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#v}"
+          dotnet pack src/CrashMap.Cli -c Release -o dist
+          test -f "dist/Rudy.CrashMap.Tool.$version.nupkg"
+          dotnet tool install Rudy.CrashMap.Tool --version "$version" --tool-path stage/tool --add-source "$PWD/dist" --configfile NuGet.Config
+          python tests/integration.py stage/tool/crashmap .
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: package-dotnet-tool
+          path: dist/*.nupkg
+          if-no-files-found: error
+  publish:
+    needs: [package, tool]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          pattern: package-*
+          path: release-assets
+          merge-multiple: true
+      - name: Hash and publish the tested preview
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          (cd release-assets && sha256sum crashmap-* *.nupkg > SHA256SUMS.txt)
+          gh release create "$GITHUB_REF_NAME" release-assets/crashmap-* release-assets/*.nupkg release-assets/SHA256SUMS.txt --title "Rudy CrashMap $GITHUB_REF_NAME" --notes-file docs/RELEASE.md --prerelease

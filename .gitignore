@@ -1,0 +1,10 @@
+**/bin/
+**/obj/
+dist/
+stage/
+artifacts/
+*.dmp
+*.mdmp
+*.log
+__pycache__/
+.vs/

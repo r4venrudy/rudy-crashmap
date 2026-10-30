@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType><AssemblyName>crashmap</AssemblyName>
+    <PackAsTool>true</PackAsTool><ToolCommandName>crashmap</ToolCommandName>
+    <PackageId>Rudy.CrashMap.Tool</PackageId><Authors>raven</Authors>
+    <Description>Offline minidump module, memory coverage, exception mapping, and comparison investigations.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/r4venrudy/rudy-crashmap</RepositoryUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+  <ItemGroup><None Include="../../README.md" Pack="true" PackagePath="/" /></ItemGroup>
+  <ItemGroup>
+    <None Include="../../LICENSE;../../NuGet.Config;../../SECURITY.md;../../CONTRIBUTING.md" Pack="true" PackagePath="/" />
+    <None Include="../../assets/banner.svg" Pack="true" PackagePath="assets/" />
+    <None Include="../../docs/*.md" Pack="true" PackagePath="docs/" />
+    <None Include="../../examples/*" Pack="true" PackagePath="examples/" />
+  </ItemGroup>
+  <ItemGroup><ProjectReference Include="../CrashMap.Core/CrashMap.Core.csproj" /></ItemGroup>
+</Project>

@@ -1,0 +1,9 @@
+# Preview validation
+
+The native C# harness uses 400 deterministic randomized coverage scenarios, each checked against an independent enumerated-byte-set oracle and ten interval queries. High unsigned addresses, overflow and invalid budgets/headers are covered. On Windows it launches its own child, calls DbgHelp MiniDumpWriteDump with memory/thread metadata, and verifies modules, threads, memory regions and report counts. That temporary real capture is deleted and never released. Non-Windows hosts explicitly report that the native Windows oracle is inapplicable.
+
+The independent standard-library Python suite writes format fixtures through `struct`, checks SHA-256 and known module/exception/coverage results, tests Memory64 offsets, duplicate ranges/names, ASLR-only differences, gates, Unicode paths, hostile HTML names, absent raw paths/payloads, hard-link preservation and exclusive outputs. It exercises nested counts/RVAs/strides/overflow, truncation, invalid UTF-16, unknown streams, budgets, invalid options and deterministic mutations. Invalid inputs must return a controlled error without a partial stdout report or unhandled exception.
+
+CI builds and tests Linux x64, Windows x64 and macOS ARM64. Release workflows are gated by the same tests; each OS tests its self-contained installed layout before packaging. A separate job installs the local dotnet-tool package with cleared remote sources. Checksums and downloaded assets are verified after publication.
+
+These are reproducible regression oracles, not exhaustive fuzzing, a formal parser proof, a benchmark, signed-binary verification, production incident validation, every DbgHelp/Crashpad version, or interoperability with compressed/kernel dumps. This preview intentionally omits stack unwinding and context interpretation rather than guessing.
