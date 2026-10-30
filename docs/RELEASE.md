@@ -4,6 +4,7 @@ Rudy CrashMap is a C#/.NET 10 offline user-mode Windows minidump investigation t
 - Exception/module offsets, virtual-address-to-capture offsets, disjoint captured-memory coverage, and executable-region review gates.
 - Module metadata comparisons with separate ASLR relocation and conservative duplicate-name handling.
 - Versioned JSON, text, offline RUDY HTML, independent synthetic/coverage oracles, and a real owned-child DbgHelp regression on Windows.
+- Required-stream checks prevent unavailable module or memory-region metadata from looking like a clear comparison/review-gate result. Input identities retain stream availability.
 
 Self-contained packages include runtime binaries, invented captures with expected metadata, example reports, documentation and runtime notices. Keep each complete bin directory. Linux x64 targets Ubuntu 24.04; Windows x64 targets Windows Server 2022 or compatible newer desktop Windows; macOS ARM64 builds on macOS 15. Older OS compatibility is unverified. The nupkg requires a .NET 10 runtime and can be installed from a local source; it is a release asset, not a claimed publication on nuget.org.
 

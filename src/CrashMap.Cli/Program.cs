@@ -37,6 +37,8 @@ static int Run(string[] args)
     var before = DumpReader.Read(args[1], limits); object report; bool reached = false;
     if (command == "inspect")
     {
+        if (gate is not null && !before.Streams.Any(s => s.Type == 16))
+            throw new InvalidDataException("Private-executable review requires a MemoryInfoList stream.");
         report = Reports.Inspect(before, rows);
         reached = gate is not null && before.Regions.Any(r => r.State == 0x1000 && r.Type == 0x20000 && (r.Protect & 0xf0) != 0);
     }

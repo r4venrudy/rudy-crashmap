@@ -6,11 +6,11 @@ namespace Rudy.CrashMap;
 
 public static class Reports
 {
-    public const string Version = "0.1.0-preview";
+    public const string Version = "0.1.1-preview";
     public static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true, PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
     private static object Module(DumpModule m) => new { m.Name, address = Address.Hex(m.Address), m.Size, m.Checksum, m.Timestamp, m.PathSha256, m.PdbIdentity };
     private static object Memory(CapturedRange m) => new { address = Address.Hex(m.Address), m.Size, m.FileOffset, m.Source };
-    private static object Identity(DumpSnapshot s) => new { s.Sha256, s.Bytes, s.Timestamp, flags = Address.Hex(s.Flags), s.System };
+    private static object Identity(DumpSnapshot s) => new { s.Sha256, s.Bytes, s.Timestamp, flags = Address.Hex(s.Flags), s.System, streamTypes = s.Streams.Select(st => st.Type).Distinct().Order().ToArray() };
     private static object[] ModuleAt(DumpSnapshot s, ulong address, int rows) => s.Modules.Where(m => Address.Contains(m.Address, m.Size, address)).Take(rows).Select(m => (object)new { module = Module(m), offset = Address.Hex(address - m.Address) }).ToArray();
     public static object Inspect(DumpSnapshot s, int rows)
     {

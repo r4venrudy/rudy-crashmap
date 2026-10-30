@@ -69,6 +69,8 @@ public static class ModuleDiff
     // Basenames are a grouping hint, never proof of file identity. Duplicate names stay ambiguous.
     public static IReadOnlyList<ModuleChange> Compare(DumpSnapshot before, DumpSnapshot after)
     {
+        if (!before.Streams.Any(s => s.Type == 4) || !after.Streams.Any(s => s.Type == 4))
+            throw new InvalidDataException("Module comparison requires a ModuleList stream in both inputs.");
         var a = before.Modules.GroupBy(m => m.Name, StringComparer.OrdinalIgnoreCase).ToDictionary(g => g.Key, g => g.ToArray(), StringComparer.OrdinalIgnoreCase);
         var b = after.Modules.GroupBy(m => m.Name, StringComparer.OrdinalIgnoreCase).ToDictionary(g => g.Key, g => g.ToArray(), StringComparer.OrdinalIgnoreCase);
         var result = new List<ModuleChange>();

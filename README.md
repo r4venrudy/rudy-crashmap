@@ -42,7 +42,7 @@ bin/crashmap diff examples/synthetic/before.dmp examples/synthetic/after.dmp --f
 The `.nupkg` release asset is an alternative for systems with a .NET 10 runtime. From a source checkout (which supplies `NuGet.Config`), download it into a local directory, then install without contacting a registry:
 
 ```sh
-dotnet tool install Rudy.CrashMap.Tool --version 0.1.0-preview --tool-path .tools --add-source DOWNLOADED_PACKAGE_DIRECTORY --configfile NuGet.Config
+dotnet tool install Rudy.CrashMap.Tool --version 0.1.1-preview --tool-path .tools --add-source DOWNLOADED_PACKAGE_DIRECTORY --configfile NuGet.Config
 .tools/crashmap --version
 ```
 
@@ -89,6 +89,8 @@ All virtual ranges are checked for overflow; file extents are checked before rea
 | `2` | Invalid arguments/metadata, unsupported encoding, resource limit, unstable source, or I/O failure |
 
 `changed` includes added/removed/changed metadata and ambiguous groups. Pure relocation does not reach it. Duplicate basenames are never paired arbitrarily. Case-insensitive basenames are grouping hints; path changes alone are not compared, and matching metadata does not prove identical binaries. Totals cover the full parsed input even when displayed rows are omitted.
+
+Comparisons require a ModuleList stream in both inputs; the private-executable gate requires MemoryInfoList. Missing required metadata returns `2`. Ordinary inspection still supports partial dumps and lists stream availability explicitly.
 
 CrashMap does not attach to processes, collect arbitrary dumps, unwind stacks, decode registers, download symbols, load modules, disassemble code, verify signatures, inspect Windows kernel/BSOD dumps, decompress future formats, or prove a security incident. The minidump header checksum is reported as unverified. Unknown stream types are listed rather than treated as analyzed.
 

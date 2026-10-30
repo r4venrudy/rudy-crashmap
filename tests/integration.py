@@ -88,7 +88,17 @@ with tempfile.TemporaryDirectory(prefix='crashmap-contract-') as temp_name:
     if os.name != 'nt':
         symbolic = temp/'source-symlink.dmp';symbolic.symlink_to(before)
         run('inspect', symbolic, code=2)
-    run('--help');check(run('--version').stdout.strip() == 'crashmap 0.1.0-preview', 'Version contract')
+    run('--help');check(run('--version').stdout.strip() == 'crashmap 0.1.1-preview', 'Version contract')
+    for kind in [4,16]:
+        raw=bytearray(original);entry=next(i for i,e in enumerate(directory(original)) if e[0]==kind)
+        struct.pack_into('<I',raw,32+entry*12,0x60000000+kind)
+        partial=temp/('missing-stream-'+str(kind)+'.dmp');partial.write_bytes(raw)
+        partial_report=report('inspect',partial)
+        check(kind not in partial_report['input']['streamTypes'],'Partial inspection exposes missing stream '+str(kind))
+        if kind==4:
+            run('diff',before,partial,'--fail-on','changed',code=2)
+            run('diff',partial,before,code=2)
+        else:run('inspect',partial,'--fail-on','private-executable',code=2)
     for tail in [[], ['--rows','0'], ['--rows','1001'], ['--rows','1','--rows','2'], ['--unknown','yes'], ['--format','yaml'], ['--format'], ['--max-items','0'], ['--max-input-mib','4097'], ['--address','1'], ['--fail-on','changed']]:
         if tail:run('inspect', before, *tail, code=2)
     for command_args in [('diff', before), ('locate',before), ('locate',before,'--address','xyz'), ('locate',before,'--address','-1'), ('locate',before,'--address','1'*17), ('locate',before,'--address','1','--fail-on','changed'), ('diff',before,after,'--fail-on','private-executable')]: run(*command_args,code=2)
